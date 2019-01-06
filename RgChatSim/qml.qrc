@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>rgnet.jpg</file>
+        <file>wordfilter.txt</file>
+        <file>Chatpanel.qml</file>
+        <file>Historydialog.qml</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,124 @@
+#include "handletextfield.h"
+#include <iostream>
+#include <fstream>
+
+/*
+ * This class handles interactions with the text field
+ */
+HandleTextField::HandleTextField(QObject *) : QObject()
+{
+}
+
+void HandleTextField::cppSlotHandleSubmitTextFieldLeft(const QString &in)
+{
+    QString dateTime, name, message;
+    dateTime = currentDateTime();
+    name = "nn";
+    message = filterWords(in);
+
+    logMessage("left.log", dateTime, name, message);
+
+    emit setMessageView(dateTime, name, message);
+}
+
+void HandleTextField::handleSubmitTextFieldRight(const QString &in)
+{
+}
+
+void HandleTextField::logMessage(string fileName, QString dateTime, QString name, QString message)
+{
+    ofstream outfile;
+    outfile.open(fileName, ios_base::app);
+    outfile << dateTime.toStdString() << ";" << name.toStdString() << ";" << message.toStdString() << endl;
+}
+
+const QString HandleTextField::currentDateTime()
+{
+    time_t now = time(nullptr);
+    struct tm tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+
+    return buf;
+}
+
+QString HandleTextField::filterWords(QString in)
+{
+    string result;
+    vector<string> messageWords = split(in.toStdString(), " ");
+
+    for (unsigned long i = 0; i < messageWords.size(); ++i) {
+
+        if (find(::filterWords.begin(), ::filterWords.end(), messageWords[i]) != ::filterWords.end()) {
+            result += "* ";
+        } else {
+            result += messageWords[i] + " ";
+        }
+    }
+
+    // remove spaces
+    result = ltrim(result);
+    result = rtrim(result);
+
+    return QString::fromStdString(result);
+}
+
+vector<string> HandleTextField::getFilterWords()
+{
+    vector<string> wordfilter;
+    string inputFile = "wordfilter.txt";
+    ifstream inputFileStream(inputFile);
+
+    if (inputFileStream.is_open()) {
+        string current_string;
+
+        while (inputFileStream >> current_string){
+            wordfilter.push_back(current_string);
+        }
+
+        inputFileStream.close();
+    } else {
+        cout << "Error! " << inputFile << " isn't found!";
+    }
+
+    return wordfilter;
+}
+
+vector<string> HandleTextField::split(string str, string token)
+{
+    vector<string> result;
+
+    while (str.size()){
+        unsigned long index = str.find(token);
+
+        if (index != string::npos) {
+            result.push_back(str.substr(0, index));
+            str = str.substr(index + token.size());
+
+            if (str.size() == 0)
+                result.push_back(str);
+        } else {
+            result.push_back(str);
+            str = "";
+        }
+    }
+
+    return result;
+}
+
+// trim from start
+inline string HandleTextField::ltrim(string s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {return !std::isspace(ch);}));
+
+    return s;
+}
+
+// trim from end
+inline string HandleTextField::rtrim(string s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {return !std::isspace(ch);}).base(), s.end());
+
+    return s;
+}
